@@ -25,29 +25,36 @@ Practicing computer vision workflows.
 Feel free to fork, contribute, or customize this project for your creative needs!
 
 # Program
+```
 import cv2
 import matplotlib.pyplot as plt
 
-# Read image
+#Read image
+
 img = cv2.imread("fa.jpeg")
 
-# Make a copy
+#Make a copy
+
 overlay = img.copy()
 
-# Glass positions
-# Left glass moved slightly to the RIGHT
+#Glass positions
+
+#Left glass moved slightly to the RIGHT
+
 left = (170, 160)
 right = (255, 160)
 
-# Glass size
+#Glass size
+
 axes = (26, 15)
 
-# Slight tilt
+#Slight tilt
+
 angle = 5
 
-# Draw two lenses
-for cx, cy in [left, right]:
+#Draw two lenses
 
+for cx, cy in [left, right]:
     # Lens
     cv2.ellipse(
         overlay,
@@ -59,8 +66,9 @@ for cx, cy in [left, right]:
         (35, 35, 35),
         -1
     )
-
+    
     # Lens border
+
     cv2.ellipse(
         overlay,
         (cx, cy),
@@ -71,8 +79,9 @@ for cx, cy in [left, right]:
         (10, 10, 10),
         2
     )
+    
+#Bridge between the two glasses
 
-# Bridge between the two glasses
 cv2.line(
     overlay,
     (left[0] + 24, left[1]),
@@ -81,7 +90,8 @@ cv2.line(
     2
 )
 
-# Left arm
+#Left arm
+
 cv2.line(
     overlay,
     (left[0] - 25, left[1]),
@@ -90,7 +100,8 @@ cv2.line(
     2
 )
 
-# Right arm
+#Right arm
+
 cv2.line(
     overlay,
     (right[0] + 25, right[1]),
@@ -99,7 +110,8 @@ cv2.line(
     2
 )
 
-# Blend with original image
+#Blend with original image
+
 result = cv2.addWeighted(
     overlay,
     0.85,
@@ -108,28 +120,40 @@ result = cv2.addWeighted(
     0
 )
 
-# Save result
+#Save result
+
 cv2.imwrite(
     "passport_with_sunglasses.png",
     result
 )
 
-# Display TWO images
+#Display TWO images
+
 plt.figure(figsize=(10, 5))
 
-# Original
+#Original
+
 plt.subplot(1, 2, 1)
+
 plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+
 plt.title("Original")
+
 plt.axis("off")
 
-# Sunglasses
+#Sunglasses
+
 plt.subplot(1, 2, 2)
+
 plt.imshow(cv2.cvtColor(result, cv2.COLOR_BGR2RGB))
+
 plt.title("Sunglasses")
+
 plt.axis("off")
 
 plt.tight_layout()
+
 plt.show()
 
 print("Sunglasses added successfully")
+```
