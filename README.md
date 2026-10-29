@@ -27,133 +27,138 @@ Feel free to fork, contribute, or customize this project for your creative needs
 # Program
 ```
 import cv2
-import matplotlib.pyplot as plt
+import numpy as np
+import math
 
-#Read image
+# Read image
+img = cv2.imread("img1.png")
 
-img = cv2.imread("fa.jpeg")
+if img is None:
+    raise FileNotFoundError("Could not find fa.jpeg")
 
-#Make a copy
+# Resize only for display if the image is very large
+original = img.copy()
+h, w = img.shape[:2]
 
-overlay = img.copy()
+display_scale = min(1.0, 1000 / w, 800 / h)
+display_img = cv2.resize(
+    img, None, fx=display_scale, fy=display_scale
+)
 
-#Glass positions
+points = []
+window_name = "Click LEFT eye, then RIGHT eye"
 
-#Left glass moved slightly to the RIGHT
+def mouse_click(event, x, y, flags, param):
+    global points
 
-left = (170, 160)
-right = (255, 160)
+    if event == cv2.EVENT_LBUTTONDOWN and len(points) < 2:
+        # Convert display coordinates to original image coordinates
+        ox = int(x / display_scale)
+        oy = int(y / display_scale)
+        points.append((ox, oy))
 
-#Glass size
+        # Mark clicked point on displayed image
+        cv2.circle(display_img, (x, y), 4, (0, 255, 0), -1)
+        cv2.imshow(window_name, display_img)
 
-axes = (26, 15)
+        print("Selected point:", (ox, oy))
 
-#Slight tilt
+        if len(points) == 2:
+            cv2.destroyWindow(window_name)
 
-angle = 5
+cv2.namedWindow(window_name)
+cv2.setMouseCallback(window_name, mouse_click)
 
-#Draw two lenses
+cv2.imshow(window_name, display_img)
 
+while len(points) < 2:
+    key = cv2.waitKey(20) & 0xFF
+    if key == 27:  # ESC
+        break
+
+cv2.destroyAllWindows()
+
+if len(points) != 2:
+    raise ValueError("Please run the cell again and select both eyes.")
+
+# Eye centers
+left = points[0]
+right = points[1]
+
+# Calculate distance between eye centers
+distance = math.dist(left, right)
+
+# Sunglasses lens dimensions
+lens_width = max(8, int(distance * 0.42))
+lens_height = max(5, int(distance * 0.23))
+
+overlay = original.copy()
+
+# Draw lenses
 for cx, cy in [left, right]:
-    # Lens
     cv2.ellipse(
         overlay,
         (cx, cy),
-        axes,
-        angle,
-        0,
-        360,
+        (lens_width, lens_height),
+        0, 0, 360,
         (35, 35, 35),
-        -1
+        -1,
+        cv2.LINE_AA
     )
-    
-    # Lens border
 
     cv2.ellipse(
         overlay,
         (cx, cy),
-        axes,
-        angle,
-        0,
-        360,
+        (lens_width, lens_height),
+        0, 0, 360,
         (10, 10, 10),
-        2
+        2,
+        cv2.LINE_AA
     )
-    
-#Bridge between the two glasses
+
+# Draw bridge
+cv2.line(
+    overlay,
+    (left[0] + lens_width, left[1]),
+    (right[0] - lens_width, right[1]),
+    (10, 10, 10),
+    3,
+    cv2.LINE_AA
+)
+
+# Draw arms
+cv2.line(
+    overlay,
+    (left[0] - lens_width, left[1]),
+    (left[0] - 2 * lens_width, left[1] - 2),
+    (10, 10, 10),
+    2,
+    cv2.LINE_AA
+)
 
 cv2.line(
     overlay,
-    (left[0] + 24, left[1]),
-    (right[0] - 24, right[1]),
+    (right[0] + lens_width, right[1]),
+    (right[0] + 2 * lens_width, right[1] - 2),
     (10, 10, 10),
-    2
+    2,
+    cv2.LINE_AA
 )
 
-#Left arm
+# Blend with original
+result = cv2.addWeighted(overlay, 0.88, original, 0.12, 0)
 
-cv2.line(
-    overlay,
-    (left[0] - 25, left[1]),
-    (left[0] - 45, left[1] - 4),
-    (10, 10, 10),
-    2
-)
+# Save result
+cv2.imwrite("passport_with_sunglasses.png", result)
 
-#Right arm
+# Display final image in Jupyter
+from matplotlib import pyplot as plt
 
-cv2.line(
-    overlay,
-    (right[0] + 25, right[1]),
-    (right[0] + 45, right[1] - 4),
-    (10, 10, 10),
-    2
-)
-
-#Blend with original image
-
-result = cv2.addWeighted(
-    overlay,
-    0.85,
-    img,
-    0.15,
-    0
-)
-
-#Save result
-
-cv2.imwrite(
-    "passport_with_sunglasses.png",
-    result
-)
-
-#Display TWO images
-
-plt.figure(figsize=(10, 5))
-
-#Original
-
-plt.subplot(1, 2, 1)
-
-plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-
-plt.title("Original")
-
-plt.axis("off")
-
-#Sunglasses
-
-plt.subplot(1, 2, 2)
-
+plt.figure(figsize=(10, 6))
 plt.imshow(cv2.cvtColor(result, cv2.COLOR_BGR2RGB))
-
-plt.title("Sunglasses")
-
+plt.title("Sunglasses Added")
 plt.axis("off")
-
-plt.tight_layout()
-
 plt.show()
 
-print("Sunglasses added successfully")
+print("Saved as passport_with_sunglasses.png")
 ```
